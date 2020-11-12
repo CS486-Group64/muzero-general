@@ -1,5 +1,6 @@
 import datetime
 import os
+import random
 
 import numpy
 import torch
@@ -11,8 +12,8 @@ class MuZeroConfig:
     def __init__(self):
         # More information is available here: https://github.com/werner-duvaud/muzero-general/wiki/Hyperparameter-Optimization
 
-        self.seed = 0  # Seed for numpy, torch and the game
-        self.max_num_gpus = None  # Fix the maximum number of GPUs to use. It's usually faster to use a single GPU (set it to 1) if it has enough memory. None will use every GPUs available
+        self.seed = random.randint(0, 10000) # Seed for numpy, torch and the game
+        self.max_num_gpus = None # Fix the maximum number of GPUs to use. It's usually faster to use a single GPU (set it to 1) if it has enough memory. None will use every GPUs available
 
         ### Game
 #        self.observation_shape = (8, 5, 5)
@@ -69,9 +70,9 @@ class MuZeroConfig:
         ### Training
         self.results_path = os.path.join(os.path.dirname(os.path.realpath(__file__)), "../results", os.path.basename(__file__)[:-3], datetime.datetime.now().strftime("%Y-%m-%d--%H-%M-%S"))  # Path to store the model weights and TensorBoard logs
         self.save_model = True  # Save the checkpoint in results_path as model.checkpoint
-        self.training_steps = 200000  # Total number of training steps (ie weights update according to a batch)
-        self.batch_size = 1024  # Number of parts of games to train on at each training step
-        self.checkpoint_interval = 1000  # Number of training steps before using the model for self-playing
+        self.training_steps = 100000  # Total number of training steps (ie weights update according to a batch)
+        self.batch_size = 512  # Number of parts of games to train on at each training step
+        self.checkpoint_interval = 10  # Number of training steps before using the model for self-playing
         self.value_loss_weight = 0.25  # Scale the value loss to avoid overfitting of the value function, paper recommends 0.25 (See paper appendix Reanalyze)
         self.train_on_gpu = True if torch.cuda.is_available() else False  # Train on GPU if available
 
@@ -87,7 +88,7 @@ class MuZeroConfig:
         ### Replay Buffer
         self.replay_buffer_size = 1000  # Number of self-play games to keep in the replay buffer
         self.num_unroll_steps = 5  # Number of game moves to keep for every batch element
-        self.td_steps = 5  # Number of steps in the future to take into account for calculating the target value
+        self.td_steps = 200  # Number of steps in the future to take into account for calculating the target value
         self.PER = True  # Prioritized Replay (See paper appendix Training), select in priority the elements in the replay buffer which are unexpected for the network
         self.PER_alpha = 1  # How much prioritization is used, 0 corresponding to the uniform case, paper suggests 1
 
@@ -327,8 +328,8 @@ class Onitama:
         card_op2 = numpy.zeros((self.board_size, self.board_size), dtype="int32")
 
         if self.player == 1:
-            board_player1 = numpy.where(self.board == 1, 1.0, 0.0)
-            board_player2 = numpy.where(self.board == -1, 1.0, 0.0)
+            board_player1 = numpy.where(self.board >= 1, 1.0, 0.0)
+            board_player2 = numpy.where(self.board <= -1, 1.0, 0.0)
             king_player1 = numpy.where(self.board == 2, 1.0, 0.0)
             king_player2 = numpy.where(self.board == -2, 1.0, 0.0)
             
@@ -359,11 +360,11 @@ class Onitama:
             king_player2 = numpy.zeros((self.board_size, self.board_size), dtype="float")
             for i in range(self.board_size):
                 for j in range(self.board_size):
-                    if self.board[i][j] == -1:
+                    if self.board[i][j] <= -1:
                         board_player1[4-i][4-j] = 1.0
-                    elif self.board[i][j] == 1:
+                    elif self.board[i][j] >= 1:
                         board_player2[4-i][4-j] = 1.0
-                    elif self.board[i][j] == -2:
+                    if self.board[i][j] == -2:
                         king_player1[4-i][4-j] = 1.0
                     elif self.board[i][j] == 2:
                         king_player2[4-i][4-j] = 1.0
