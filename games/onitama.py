@@ -20,14 +20,14 @@ class MuZeroConfig:
         self.observation_shape = (10, 5, 5)  # Dimensions of the game observation, must be 3D (channel, height, width). For a 1D array, please reshape it to (1, 1, length of array)
         self.action_space = list(range(1250))  # Fixed list of all possible actions. You should only edit the length
         self.players = list(range(2))  # List of players. You should only edit the length
-        self.stacked_observations = 8  # Number of previous observations and previous actions to add to the current observation
+        self.stacked_observations = 1  # Number of previous observations and previous actions to add to the current observation
 
         # Evaluate
         self.muzero_player = 0  # Turn Muzero begins to play (0: MuZero plays first, 1: MuZero plays second)
         self.opponent = "expert"  # Hard coded agent that MuZero faces to assess his progress in multiplayer games. It doesn't influence training. None, "random" or "expert" if implemented in the Game class
         
         ### Self-Play
-        self.num_workers = 3  # Number of simultaneous threads/workers self-playing to feed the replay buffer
+        self.num_workers = 4  # Number of simultaneous threads/workers self-playing to feed the replay buffer
         self.selfplay_on_gpu = True if torch.cuda.is_available() else False
         self.max_moves = 200  # Maximum number of moves if game is not finished before
         self.num_simulations = 200  # Number of future moves self-simulated
